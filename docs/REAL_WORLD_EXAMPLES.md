@@ -224,9 +224,17 @@ Here's an example of how a dependency graph looks for a Clean Architecture proje
 
 ![Dependency Graph Example](../examples/generate_graph/dependency_graph.png)
 
-This visualization clearly shows the dependency flow between packages, making it easier to:
+This visualization shows the dependency flow between packages. In this example:
+- `domain` has no dependencies, as expected in Clean Architecture
+- `application` depends on `domain`, which is correct
+- `infrastructure` depends on `domain`, which is actually a violation of Clean Architecture principles
+- `presentation` depends on `application`, which is the correct flow
+
+This sample project doesn't strictly adhere to Clean Architecture principles, which is why we see the infrastructure directly depending on domain. In proper Clean Architecture, infrastructure should implement interfaces defined in the domain layer, not depend directly on domain entities.
+
+Having this visualization makes it easier to:
 - Verify architectural boundaries
-- Identify violations (e.g., if domain depended on infrastructure)
+- Identify violations (like the infrastructure→domain dependency seen here)
 - Communicate architectural design to team members
 - Document the current state of your architecture
 

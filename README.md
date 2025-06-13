@@ -223,10 +223,12 @@ In this graph:
 - Each box represents a package in your project
 - Arrows show dependencies between packages (arrow points to the dependency)
 - You can see that:
-  - `application` depends on `domain`
-  - `infrastructure` depends on `domain`
-  - `presentation` depends on `application`
+  - `application` depends on `domain` (correct in Clean Architecture)
+  - `infrastructure` depends on `domain` (this is actually a violation of Clean Architecture principles)
+  - `presentation` depends on `application` (correct in Clean Architecture)
   - `domain` has no dependencies (as expected in Clean Architecture)
+
+Note: This example graph actually shows a violation of Clean Architecture. In proper Clean Architecture, infrastructure should not depend directly on domain but should implement interfaces defined in the domain layer, following the Dependency Inversion Principle. The sample project used to generate this graph doesn't strictly adhere to Clean Architecture principles, which is why we see this violation.
 
 The dependency graph visualizes package dependencies, making it easier to:
 - Identify architectural violations at a glance
