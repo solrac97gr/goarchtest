@@ -95,7 +95,7 @@ func (er *ErrorReporter) GenerateDependencyGraph(types []*TypeInfo) string {
 	graph.WriteString("  node [shape=box, style=filled, fillcolor=lightblue];\n")
 
 	// Handle nil or empty types
-	if types == nil || len(types) == 0 {
+	if len(types) == 0 {
 		graph.WriteString("  note [label=\"No types provided or empty type set\", shape=note, fillcolor=lightyellow];\n")
 		graph.WriteString("}\n")
 		return graph.String()
@@ -138,7 +138,7 @@ func (er *ErrorReporter) GenerateDependencyGraph(types []*TypeInfo) string {
 // SaveDependencyGraph saves a dependency graph to a file
 func (er *ErrorReporter) SaveDependencyGraph(types []*TypeInfo, outputPath string) error {
 	// If types is nil, we'll provide an informative message
-	if types == nil || len(types) == 0 {
+	if len(types) == 0 {
 		// Create a simple placeholder graph
 		placeholderGraph := `digraph ArchitectureDependencies {
   rankdir=TB;
