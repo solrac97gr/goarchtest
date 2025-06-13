@@ -18,8 +18,8 @@ func (ap *ArchitecturePattern) Validate(types *Types) []*ValidationResult {
 	for i, rule := range ap.Rules {
 		result := rule(types)
 		validationResult := &ValidationResult{
-			PatternName: ap.Name,
-			RuleIndex:   i,
+			PatternName:  ap.Name,
+			RuleIndex:    i,
 			IsSuccessful: result.IsSuccessful,
 			FailingTypes: result.FailingTypes,
 		}
@@ -119,8 +119,8 @@ func HexagonalArchitecture(domainNamespace, portsNamespace, adaptersNamespace st
 						IsSuccessful: false,
 						FailingTypes: []*TypeInfo{
 							{
-								Name:    "Domain",
-								Package: domainNamespace,
+								Name:     "Domain",
+								Package:  domainNamespace,
 								FullPath: "No domain types found",
 							},
 						},
@@ -153,10 +153,10 @@ func LayeredArchitecture(layers ...string) *ArchitecturePattern {
 	// For each layer, ensure it doesn't depend on layers above it
 	for i := 0; i < len(layers); i++ {
 		currentLayer := layers[i]
-		
-		for j := i+1; j < len(layers); j++ {
+
+		for j := i + 1; j < len(layers); j++ {
 			higherLayer := layers[j]
-			
+
 			// Create a closure to capture the layer values
 			rule := func(current, higher string) func(*Types) *Result {
 				return func(types *Types) *Result {
@@ -167,7 +167,7 @@ func LayeredArchitecture(layers ...string) *ArchitecturePattern {
 						GetResult()
 				}
 			}(currentLayer, higherLayer)
-			
+
 			rules = append(rules, rule)
 		}
 	}
@@ -310,7 +310,158 @@ func DDDWithCleanArchitecture(domains []string, sharedNamespace, pkgNamespace st
 	}
 
 	return &ArchitecturePattern{
-		Name: fmt.Sprintf("DDD with Clean Architecture (domains: %s)", strings.Join(domains, ", ")),
+		Name:  fmt.Sprintf("DDD with Clean Architecture (domains: %s)", strings.Join(domains, ", ")),
+		Rules: rules,
+	}
+}
+
+// CQRSArchitecture defines the Command Query Responsibility Segregation pattern
+// This pattern enforces:
+// 1. Commands (write operations) and Queries (read operations) are separated
+// 2. Commands should not depend on queries
+// 3. Queries should not depend on commands
+// 4. Both can depend on shared domain models
+// 5. Commands typically interact with write models/aggregates
+// 6. Queries typically interact with read models/projections
+func CQRSArchitecture(commandNamespace, queryNamespace, domainNamespace, writeModelNamespace, readModelNamespace string) *ArchitecturePattern {
+	var rules []func(*Types) *Result
+
+	// Rule 1: Commands should not depend on queries (separation of concerns)
+	rules = append(rules, func(types *Types) *Result {
+		return types.That().
+			ResideInNamespace(commandNamespace).
+			ShouldNot().
+			HaveDependencyOn(queryNamespace).
+			GetResult()
+	})
+
+	// Rule 2: Queries should not depend on commands (separation of concerns)
+	rules = append(rules, func(types *Types) *Result {
+		return types.That().
+			ResideInNamespace(queryNamespace).
+			ShouldNot().
+			HaveDependencyOn(commandNamespace).
+			GetResult()
+	})
+
+	// Rule 3: Write models should not depend on read models
+	if writeModelNamespace != "" && readModelNamespace != "" {
+		rules = append(rules, func(types *Types) *Result {
+			return types.That().
+				ResideInNamespace(writeModelNamespace).
+				ShouldNot().
+				HaveDependencyOn(readModelNamespace).
+				GetResult()
+		})
+
+		// Rule 4: Read models should not depend on write models
+		rules = append(rules, func(types *Types) *Result {
+			return types.That().
+				ResideInNamespace(readModelNamespace).
+				ShouldNot().
+				HaveDependencyOn(writeModelNamespace).
+				GetResult()
+		})
+
+		// Rule 5: Commands should primarily use write models
+		rules = append(rules, func(types *Types) *Result {
+			return types.That().
+				ResideInNamespace(commandNamespace).
+				ShouldNot().
+				HaveDependencyOn(readModelNamespace).
+				GetResult()
+		})
+
+		// Rule 6: Queries should primarily use read models
+		rules = append(rules, func(types *Types) *Result {
+			return types.That().
+				ResideInNamespace(queryNamespace).
+				ShouldNot().
+				HaveDependencyOn(writeModelNamespace).
+				GetResult()
+		})
+	}
+
+	// Rule 7: Both commands and queries can depend on shared domain (if provided)
+	// This is allowed, so no restriction rule needed
+
+	return &ArchitecturePattern{
+		Name:  "CQRS Architecture",
+		Rules: rules,
+	}
+}
+
+// EventSourcedCQRSArchitecture defines CQRS with Event Sourcing pattern
+// This pattern enforces:
+// 1. All CQRS rules
+// 2. Commands should depend on events (to produce them)
+// 3. Event store is the source of truth for commands
+// 4. Queries should not depend on event store directly (use projections)
+// 5. Projections should depend on events (to build read models)
+func EventSourcedCQRSArchitecture(commandNamespace, queryNamespace, eventNamespace, eventStoreNamespace, projectionNamespace, domainNamespace string) *ArchitecturePattern {
+	var rules []func(*Types) *Result
+
+	// Include basic CQRS rules
+	cqrsPattern := CQRSArchitecture(commandNamespace, queryNamespace, domainNamespace, "", "")
+	rules = append(rules, cqrsPattern.Rules...)
+
+	// Rule 1: Commands should have dependency on events namespace (to produce them)
+	if eventNamespace != "" {
+		rules = append(rules, func(types *Types) *Result {
+			return types.That().
+				ResideInNamespace(commandNamespace).
+				Should().
+				HaveDependencyOn(eventNamespace).
+				GetResult()
+		})
+	}
+
+	// Rule 2: Commands should interact with event store
+	if eventStoreNamespace != "" {
+		rules = append(rules, func(types *Types) *Result {
+			return types.That().
+				ResideInNamespace(commandNamespace).
+				Should().
+				HaveDependencyOn(eventStoreNamespace).
+				GetResult()
+		})
+	}
+
+	// Rule 3: Queries should not depend on event store directly (use projections instead)
+	if eventStoreNamespace != "" {
+		rules = append(rules, func(types *Types) *Result {
+			return types.That().
+				ResideInNamespace(queryNamespace).
+				ShouldNot().
+				HaveDependencyOn(eventStoreNamespace).
+				GetResult()
+		})
+	}
+
+	// Rule 4: Projections should depend on events (to build read models)
+	if projectionNamespace != "" && eventNamespace != "" {
+		rules = append(rules, func(types *Types) *Result {
+			return types.That().
+				ResideInNamespace(projectionNamespace).
+				Should().
+				HaveDependencyOn(eventNamespace).
+				GetResult()
+		})
+	}
+
+	// Rule 5: Queries should depend on projections (not directly on events)
+	if projectionNamespace != "" {
+		rules = append(rules, func(types *Types) *Result {
+			return types.That().
+				ResideInNamespace(queryNamespace).
+				Should().
+				HaveDependencyOn(projectionNamespace).
+				GetResult()
+		})
+	}
+
+	return &ArchitecturePattern{
+		Name:  "Event Sourced CQRS Architecture",
 		Rules: rules,
 	}
 }
