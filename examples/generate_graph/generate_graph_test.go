@@ -83,6 +83,7 @@ func TestGenerateDependencyGraph(t *testing.T) {
 	t.Log("- Each box represents a package in your project")
 	t.Log("- Arrows show dependencies between packages")
 	t.Log("- The direction of the arrow indicates which package depends on another")
+	t.Log("- Red arrows highlight architectural violations (e.g., infrastructure→domain dependencies)")
 	t.Log("- For clean architecture, domain should have no outgoing arrows")
 }
 

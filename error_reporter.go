@@ -94,6 +94,18 @@ func (er *ErrorReporter) GenerateDependencyGraph(types []*TypeInfo) string {
 	graph.WriteString("  rankdir=TB;\n")
 	graph.WriteString("  node [shape=box, style=filled, fillcolor=lightblue];\n")
 
+	// Add a legend for violation edges
+	graph.WriteString("  subgraph cluster_legend {\n")
+	graph.WriteString("    label=\"Legend\";\n")
+	graph.WriteString("    style=filled;\n")
+	graph.WriteString("    color=lightgrey;\n")
+	graph.WriteString("    node [style=filled, shape=box];\n")
+	graph.WriteString("    normal_edge [label=\"Normal Dependency\", shape=plaintext];\n")
+	graph.WriteString("    violation_edge [label=\"Architecture Violation\", shape=plaintext];\n")
+	graph.WriteString("    normal_edge -> violation_edge [color=black, label=\"Normal\"];\n")
+	graph.WriteString("    violation_edge -> normal_edge [color=red, penwidth=2.0, label=\"Violation\"];\n")
+	graph.WriteString("  }\n")
+
 	// Handle nil or empty types
 	if len(types) == 0 {
 		graph.WriteString("  note [label=\"No types provided or empty type set\", shape=note, fillcolor=lightyellow];\n")
@@ -123,7 +135,19 @@ func (er *ErrorReporter) GenerateDependencyGraph(types []*TypeInfo) string {
 			// Find if any of our packages match this import
 			for pkg, dstNode := range packageNodes {
 				if strings.Contains(imp, pkg) && srcNode != dstNode {
-					graph.WriteString(fmt.Sprintf("  %s -> %s;\n", srcNode, dstNode))
+					// Check for architectural violations
+					isViolation := false
+
+					// Mark as violation if infrastructure depends on domain (Clean Architecture violation)
+					if strings.Contains(t.Package, "infrastructure") && strings.Contains(pkg, "domain") {
+						isViolation = true
+					}
+
+					if isViolation {
+						graph.WriteString(fmt.Sprintf("  %s -> %s [color=red, penwidth=2.0];\n", srcNode, dstNode))
+					} else {
+						graph.WriteString(fmt.Sprintf("  %s -> %s;\n", srcNode, dstNode))
+					}
 					break
 				}
 			}

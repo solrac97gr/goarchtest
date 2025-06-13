@@ -29,6 +29,9 @@ The dependency graph shows the relationships between packages in your project:
 
 - Each box represents a package in your project
 - Arrows show dependencies between packages
+- Normal dependencies are shown with black arrows
+- Architecture violations (e.g., infrastructure→domain dependencies) are highlighted with thick red arrows
+- The direction of the arrow indicates which package depends on another
 - The direction of the arrow indicates which package depends on another
 - For clean architecture, domain should have no outgoing arrows
 

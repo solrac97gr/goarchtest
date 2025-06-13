@@ -222,9 +222,10 @@ Here's an example of how a dependency graph looks for a project following Clean 
 In this graph:
 - Each box represents a package in your project
 - Arrows show dependencies between packages (arrow points to the dependency)
+- Red arrows highlight architectural violations (e.g., when infrastructure directly depends on domain)
 - You can see that:
   - `application` depends on `domain` (correct in Clean Architecture)
-  - `infrastructure` depends on `domain` (this is actually a violation of Clean Architecture principles)
+  - `infrastructure` depends on `domain` (this is actually a violation of Clean Architecture principles, highlighted in red)
   - `presentation` depends on `application` (correct in Clean Architecture)
   - `domain` has no dependencies (as expected in Clean Architecture)
 

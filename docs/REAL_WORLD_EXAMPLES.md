@@ -227,8 +227,12 @@ Here's an example of how a dependency graph looks for a Clean Architecture proje
 This visualization shows the dependency flow between packages. In this example:
 - `domain` has no dependencies, as expected in Clean Architecture
 - `application` depends on `domain`, which is correct
-- `infrastructure` depends on `domain`, which is actually a violation of Clean Architecture principles
+- `infrastructure` depends on `domain`, which is a violation of Clean Architecture principles (highlighted in red)
 - `presentation` depends on `application`, which is the correct flow
+
+The tool automatically highlights architectural violations in red, making them easy to spot:
+- Normal dependencies are shown with black arrows
+- Violations (like infrastructure→domain dependencies) are shown with thick red arrows
 
 This sample project doesn't strictly adhere to Clean Architecture principles, which is why we see the infrastructure directly depending on domain. In proper Clean Architecture, infrastructure should implement interfaces defined in the domain layer, not depend directly on domain entities.
 
