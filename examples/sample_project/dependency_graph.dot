@@ -1,0 +1,5 @@
+digraph ArchitectureDependencies {
+  rankdir=TB;
+  node [shape=box, style=filled, fillcolor=lightblue];
+  note [label="No types provided or empty type set", shape=note, fillcolor=lightyellow];
+}
