@@ -209,3 +209,108 @@ func MVCArchitecture(modelNamespace, viewNamespace, controllerNamespace string) 
 		},
 	}
 }
+
+// DDDWithCleanArchitecture defines a Domain-Driven Design pattern with Clean Architecture within each bounded context
+// This pattern enforces:
+// 1. Bounded contexts are isolated from each other (no cross-domain dependencies)
+// 2. Within each domain: Clean Architecture layers (domain -> application -> infrastructure)
+// 3. Shared kernel can be used by all domains
+// 4. pkg/ contains reusable utilities that can be used by any layer
+func DDDWithCleanArchitecture(domains []string, sharedNamespace, pkgNamespace string) *ArchitecturePattern {
+	var rules []func(*Types) *Result
+
+	// Rule 1: Domain layers should not depend on application or infrastructure within the same domain
+	for _, domain := range domains {
+		domainNS := fmt.Sprintf("internal/%s/domain", domain)
+		applicationNS := fmt.Sprintf("internal/%s/application", domain)
+		infrastructureNS := fmt.Sprintf("internal/%s/infrastructure", domain)
+
+		// Domain should not depend on application
+		rules = append(rules, func(domainNS, applicationNS string) func(*Types) *Result {
+			return func(types *Types) *Result {
+				return types.That().
+					ResideInNamespace(domainNS).
+					ShouldNot().
+					HaveDependencyOn(applicationNS).
+					GetResult()
+			}
+		}(domainNS, applicationNS))
+
+		// Domain should not depend on infrastructure
+		rules = append(rules, func(domainNS, infrastructureNS string) func(*Types) *Result {
+			return func(types *Types) *Result {
+				return types.That().
+					ResideInNamespace(domainNS).
+					ShouldNot().
+					HaveDependencyOn(infrastructureNS).
+					GetResult()
+			}
+		}(domainNS, infrastructureNS))
+
+		// Application should not depend on infrastructure
+		rules = append(rules, func(applicationNS, infrastructureNS string) func(*Types) *Result {
+			return func(types *Types) *Result {
+				return types.That().
+					ResideInNamespace(applicationNS).
+					ShouldNot().
+					HaveDependencyOn(infrastructureNS).
+					GetResult()
+			}
+		}(applicationNS, infrastructureNS))
+	}
+
+	// Rule 2: Cross-domain dependencies are not allowed (bounded context isolation)
+	for i, domain1 := range domains {
+		for j, domain2 := range domains {
+			if i != j {
+				domain1Prefix := fmt.Sprintf("internal/%s", domain1)
+				domain2Prefix := fmt.Sprintf("internal/%s", domain2)
+
+				rules = append(rules, func(d1, d2 string) func(*Types) *Result {
+					return func(types *Types) *Result {
+						return types.That().
+							ResideInNamespace(d1).
+							ShouldNot().
+							HaveDependencyOn(d2).
+							GetResult()
+					}
+				}(domain1Prefix, domain2Prefix))
+			}
+		}
+	}
+
+	// Rule 3: Only domain layers can depend on shared namespace (shared kernel)
+	if sharedNamespace != "" {
+		for _, domain := range domains {
+			applicationNS := fmt.Sprintf("internal/%s/application", domain)
+			infrastructureNS := fmt.Sprintf("internal/%s/infrastructure", domain)
+
+			// Application should not depend on shared (only domain can)
+			rules = append(rules, func(applicationNS, sharedNS string) func(*Types) *Result {
+				return func(types *Types) *Result {
+					return types.That().
+						ResideInNamespace(applicationNS).
+						ShouldNot().
+						HaveDependencyOn(sharedNS).
+						GetResult()
+				}
+			}(applicationNS, sharedNamespace))
+
+			// Infrastructure should not depend on shared (only domain can)
+			rules = append(rules, func(infrastructureNS, sharedNS string) func(*Types) *Result {
+				return func(types *Types) *Result {
+					return types.That().
+						ResideInNamespace(infrastructureNS).
+						ShouldNot().
+						HaveDependencyOn(sharedNS).
+						GetResult()
+				}
+			}(infrastructureNS, sharedNamespace))
+		}
+	}
+
+	return &ArchitecturePattern{
+		Name: fmt.Sprintf("DDD with Clean Architecture (domains: %s)", strings.Join(domains, ", ")),
+		Rules: rules,
+	}
+}
