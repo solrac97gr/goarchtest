@@ -6,6 +6,51 @@
 
 GoArchTest is a Go library for testing architectural constraints in Go applications. It provides a fluent API to define rules about how your code should be structured and helps ensure that your codebase adheres to those rules.
 
+### Why do I need GoArchTest when Go already prevents import cycles?
+
+This is a common and excellent question! While Go's compiler prevents **circular dependencies**, it doesn't prevent **architectural violations**. Here's the key difference:
+
+**Go prevents this (import cycle):**
+```go
+package A
+import "B"  // A → B
+
+package B  
+import "A"  // B → A (ERROR: import cycle)
+```
+
+**Go ALLOWS this (but it violates Clean Architecture):**
+```go
+package domain          // Inner layer
+import "infrastructure" // Depending on outer layer ❌
+
+package infrastructure  // Outer layer  
+import "domain"         // Depending on inner layer ✅
+```
+
+Both packages compile fine in Go (no import cycle), but the first violates architectural principles. GoArchTest catches violations like:
+- Domain layer importing infrastructure
+- Presentation layer skipping application to access infrastructure directly
+- Business logic depending on HTTP frameworks
+- Cross-domain contamination between bounded contexts
+
+**Example of what GoArchTest catches:**
+```go
+// This compiles in Go but breaks Clean Architecture
+package domain
+import "myapp/infrastructure/database"  // ❌ Architecture violation
+
+// GoArchTest detects this:
+func TestArchitecture(t *testing.T) {
+    result := goarchtest.InPath("./").
+        That().ResideInNamespace("domain").
+        ShouldNot().HaveDependencyOn("infrastructure").
+        GetResult()  // ❌ Fails - catches the violation!
+}
+```
+
+So GoArchTest provides **architectural enforcement** beyond Go's **import cycle protection**.
+
 ### How does GoArchTest compare to NetArchTest?
 
 GoArchTest is inspired by NetArchTest but is adapted for Go's package-based architecture. While NetArchTest uses .NET's assembly and reflection capabilities, GoArchTest analyzes Go's AST (Abstract Syntax Tree) to understand code structure and dependencies.

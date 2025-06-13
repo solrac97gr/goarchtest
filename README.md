@@ -34,6 +34,9 @@ func TestArchitecture(t *testing.T) {
 }
 ```
 
+> **💡 Why do I need this when Go prevents import cycles?** 
+> Go only prevents circular dependencies (A→B→A), but allows architectural violations like inner layers depending on outer layers (domain→infrastructure). GoArchTest enforces proper architectural boundaries that Go's compiler cannot check. [Learn more →](./examples/import_cycles_vs_architecture)
+
 ## Why GoArchTest?
 
 GoArchTest helps you:
@@ -43,6 +46,106 @@ GoArchTest helps you:
 - **Document architectural decisions** as executable tests
 - **Ensure consistency** across large codebases and teams
 - **Validate architectural patterns** like Clean Architecture, Hexagonal Architecture, etc.
+
+## Why Do We Need This When Go Prevents Import Cycles?
+
+While Go's compiler prevents **circular dependencies** (A imports B, B imports A), it doesn't prevent **architectural violations**. Here's why GoArchTest adds crucial value:
+
+### Go's Import Cycle Protection vs. Architectural Rules
+
+**What Go prevents:**
+```go
+// Go compiler ERROR: import cycle
+package A
+import "B"  // A imports B
+
+package B  
+import "A"  // B imports A - COMPILER ERROR
+```
+
+**What Go ALLOWS but violates Clean Architecture:**
+```go
+// Go compiler: ✅ COMPILES FINE
+// Clean Architecture: ❌ VIOLATION
+package domain
+import "infrastructure"  // Inner layer importing outer layer
+
+package infrastructure
+import "domain"  // This is actually correct in Clean Architecture
+```
+
+### Real-World Architectural Problems Go Doesn't Catch
+
+1. **Layer Violations**
+   ```go
+   // Domain importing infrastructure - Go allows, but breaks Clean Architecture
+   package domain
+   import "myapp/infrastructure/database"
+   ```
+
+2. **Skipping Layers**
+   ```go
+   // Presentation directly importing infrastructure - Go allows, but bad architecture
+   package presentation  
+   import "myapp/infrastructure/repository"  // Should go through application layer
+   ```
+
+3. **Wrong Direction Dependencies**
+   ```go
+   // Business logic depending on frameworks - Go allows, but creates tight coupling
+   package business
+   import "github.com/gin-gonic/gin"  // Business logic shouldn't know about HTTP frameworks
+   ```
+
+4. **Namespace Violations**
+   ```go
+   // User service importing order logic - Go allows, but violates bounded contexts
+   package user
+   import "myapp/order/internal"  // Cross-domain pollution
+   ```
+
+### The Value GoArchTest Provides
+
+| Problem | Go's Protection | GoArchTest's Solution |
+|---------|----------------|----------------------|
+| Circular imports | ✅ Prevented | Not needed |
+| Layer violations | ❌ Allowed | ✅ Detected and prevented |
+| Architectural drift | ❌ Allowed | ✅ Detected over time |
+| Team consistency | ❌ No enforcement | ✅ Automated checks in CI |
+| Documentation | ❌ No formal way | ✅ Tests as living documentation |
+
+### Example: Clean Architecture in Go
+
+```go
+// This compiles fine in Go but violates Clean Architecture:
+package domain
+import (
+    "myapp/infrastructure/database"  // ❌ Inner layer depending on outer
+    "myapp/presentation/http"        // ❌ Inner layer depending on outer  
+)
+
+// GoArchTest catches this violation:
+func TestCleanArchitecture(t *testing.T) {
+    result := goarchtest.InPath("./").
+        That().
+        ResideInNamespace("domain").
+        ShouldNot().
+        HaveDependencyOn("infrastructure").  // ❌ Test fails - violation detected!
+        GetResult()
+}
+```
+
+### Benefits in Large Codebases
+
+- **Prevent architectural erosion** as teams grow
+- **Onboard new developers** with clear architectural rules
+- **Maintain code quality** across multiple teams and microservices
+- **Enforce design patterns** consistently
+- **Catch violations early** in CI/CD pipelines
+
+GoArchTest bridges the gap between what Go's compiler enforces (import cycles) and what good software architecture requires (proper layer separation, dependency direction, and bounded contexts).
+
+**📚 For a detailed practical example of these concepts, see [Import Cycles vs Architectural Violations Example](./examples/import_cycles_vs_architecture)**
 
 ## Detailed Usage Guide
 
@@ -316,6 +419,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Further Documentation
 
 - [Real-World Examples and Best Practices](./docs/REAL_WORLD_EXAMPLES.md) - More detailed examples and best practices for using GoArchTest in real-world scenarios.
-- [Frequently Asked Questions (FAQ)](./docs/FAQ.md) - Answers to common questions about using GoArchTest.
+- [Frequently Asked Questions (FAQ)](./docs/FAQ.md) - Answers to common questions about using GoArchTest, including why you need it when Go prevents import cycles.
+- [Import Cycles vs Architectural Violations](./examples/import_cycles_vs_architecture) - **NEW!** Explains the key difference between what Go's compiler prevents and what GoArchTest prevents.
 - [Error Handling Examples](./examples/error_handling/error_handling.go) - Examples of advanced error handling techniques.
 - [Dependency Graph Generation Example](./examples/generate_graph) - Example showing how to generate and visualize dependency graphs for your projects.
+- [Clean Architecture Example](./examples/clean_architecture) - Comprehensive example of testing Clean Architecture patterns.
+- [Custom Predicates Example](./examples/custom_predicates) - How to create and use custom architectural rules.
