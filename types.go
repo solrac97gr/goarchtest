@@ -3,17 +3,17 @@ package goarchtest
 import (
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/token"
 	"os"
-	"path/filepath"
 	"strings"
+
+	"golang.org/x/tools/go/packages"
 )
 
 // Types represents the entry point for architecture testing
 type Types struct {
-	packages map[string]*ast.Package
-	typeSet  *TypeSet
+	pkgs    []*packages.Package
+	typeSet *TypeSet
 }
 
 // TypeSet represents a collection of types that match certain criteria
@@ -36,34 +36,23 @@ type TypeInfo struct {
 
 // InPath creates a new Types instance for packages in the specified directory path
 func InPath(path string) *Types {
-	packages := make(map[string]*ast.Package)
-	fset := token.NewFileSet()
+	cfg := &packages.Config{
+		Mode: packages.NeedName | packages.NeedTypes | packages.NeedSyntax | packages.NeedTypesInfo | packages.NeedImports,
+		Dir:  path,
+	}
 
-	// Walk through all Go files in the specified path
-	filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+	pkgs, err := packages.Load(cfg, "./...")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load packages: %v\n", err)
+		return &Types{
+			pkgs:    []*packages.Package{},
+			typeSet: &TypeSet{types: []*TypeInfo{}, originalTypes: []*TypeInfo{}},
 		}
+	}
 
-		if info.IsDir() {
-			// Parse the directory
-			pkgs, err := parser.ParseDir(fset, path, nil, parser.ParseComments)
-			if err != nil {
-				return nil
-			}
-
-			// Add all packages to our map
-			for name, pkg := range pkgs {
-				packages[name] = pkg
-			}
-		}
-		return nil
-	})
-
-	// Create a Types instance with the found packages
 	return &Types{
-		packages: packages,
-		typeSet:  extractTypesFromPackages(packages),
+		pkgs:    pkgs,
+		typeSet: extractTypesFromPackages(pkgs),
 	}
 }
 
@@ -72,51 +61,58 @@ func (t *Types) That() *TypeSet {
 	return t.typeSet.That()
 }
 
-// extractTypesFromPackages processes the AST to extract type information
-func extractTypesFromPackages(packages map[string]*ast.Package) *TypeSet {
+// extractTypesFromPackages processes the packages to extract type information
+func extractTypesFromPackages(pkgs []*packages.Package) *TypeSet {
 	var types []*TypeInfo
 
-	for pkgName, pkg := range packages {
-		for fileName, file := range pkg.Files {
-			// Extract imports
-			imports := make([]string, 0)
-			for _, imp := range file.Imports {
-				if imp.Path != nil {
-					// Remove quotes from import path
-					impPath := strings.Trim(imp.Path.Value, "\"")
-					imports = append(imports, impPath)
-				}
-			}
+	for _, pkg := range pkgs {
+		// Skip packages with errors
+		if len(pkg.Errors) > 0 {
+			continue
+		}
 
-			// Find types in the file
+		imports := make([]string, 0)
+		for importPath := range pkg.Imports {
+			imports = append(imports, importPath)
+		}
+
+		// Get types from this package using syntax trees since we can't easily
+		// map from types.Object to struct/interface information
+		for _, file := range pkg.Syntax {
 			for _, decl := range file.Decls {
-				if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
-					for _, spec := range genDecl.Specs {
-						if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-							typeInfo := &TypeInfo{
-								Name:     typeSpec.Name.Name,
-								Package:  pkgName,
-								FullPath: fileName,
-								Imports:  imports,
-							}
+				genDecl, ok := decl.(*ast.GenDecl)
+				if !ok || genDecl.Tok != token.TYPE {
+					continue
+				}
 
-							// Check if it's a struct
-							if _, ok := typeSpec.Type.(*ast.StructType); ok {
-								typeInfo.IsStruct = true
-							}
+				for _, spec := range genDecl.Specs {
+					typeSpec, ok := spec.(*ast.TypeSpec)
+					if !ok {
+						continue
+					}
 
-							// Check if it implements interfaces
-							if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
-								for _, method := range interfaceType.Methods.List {
-									for _, name := range method.Names {
-										typeInfo.Interfaces = append(typeInfo.Interfaces, name.Name)
-									}
-								}
-							}
+					typeInfo := &TypeInfo{
+						Name:     typeSpec.Name.Name,
+						Package:  pkg.Name,
+						FullPath: pkg.PkgPath,
+						Imports:  imports,
+					}
 
-							types = append(types, typeInfo)
+					// Check if it's a struct
+					if _, ok := typeSpec.Type.(*ast.StructType); ok {
+						typeInfo.IsStruct = true
+					}
+
+					// Check if it implements interfaces
+					if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
+						for _, method := range interfaceType.Methods.List {
+							for _, name := range method.Names {
+								typeInfo.Interfaces = append(typeInfo.Interfaces, name.Name)
+							}
 						}
 					}
+
+					types = append(types, typeInfo)
 				}
 			}
 		}

@@ -72,6 +72,17 @@ GoArchTest is organized into several components:
 
 When adding new features, consider which component your changes fit into.
 
+## Project Architecture
+
+GoArchTest is structured as follows:
+
+- **Core Analysis**: Uses `golang.org/x/tools/go/packages` for type analysis
+- **Predicates**: Filtering and checking architecture rules
+- **Architecture Patterns**: Predefined architectural patterns
+- **Reporting Tools**: Error reporting and visualization
+
+When adding new features or modifying the core analysis components, please ensure you understand how the Go type system and package loader work. The project has moved away from using the deprecated `ast.Package` in favor of the more robust type checking system.
+
 ## Feature Requests
 
 Feature requests are welcome! To suggest a new feature:

@@ -208,6 +208,15 @@ if err != nil {
 // dot -Tpng dependency_graph.dot -o dependency_graph.png
 ```
 
+## Implementation Details
+
+GoArchTest uses modern Go tooling for reliable code analysis:
+
+- Uses `golang.org/x/tools/go/packages` for robust package loading and type information
+- Employs Go's type checker instead of the deprecated `ast.Package` for more accurate analysis
+- Analyzes type relationships and dependencies using Go's type system
+- Extracts imports, struct and interface information from Go source code
+
 ## Available Predicates
 
 ### Selectors

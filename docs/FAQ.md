@@ -14,6 +14,10 @@ GoArchTest is inspired by NetArchTest but is adapted for Go's package-based arch
 
 GoArchTest supports Go 1.18 and above.
 
+### How does GoArchTest analyze Go code?
+
+GoArchTest uses Go's modern type checking system and the `golang.org/x/tools/go/packages` package to analyze your code. It loads packages, extracts type information, and analyzes dependencies between types. Unlike older approaches that used the now-deprecated `ast.Package`, GoArchTest leverages Go's type system for more accurate and reliable analysis.
+
 ## Usage Questions
 
 ### How do I handle false positives in architecture tests?
