@@ -214,22 +214,33 @@ For a complete working example, see the [dependency graph generation example](./
 - How to generate a DOT file representing dependencies between packages
 - How to convert the DOT file to a PNG image using Graphviz
 - How to interpret the resulting dependency graph
+- **How architectural violations appear in the graph** (the example includes intentional violations)
 
-Here's an example of how a dependency graph looks for a project that should be following Clean Architecture:
+Here's an example of how a dependency graph looks for a project that violates Clean Architecture principles:
 
 ![Dependency Graph Example](./examples/generate_graph/dependency_graph.png)
 
 In this graph:
 - Each box represents a package in your project
 - Arrows show dependencies between packages (arrow points to the dependency)
-- Red arrows highlight architectural violations (e.g., when infrastructure directly depends on domain)
+- Red arrows highlight architectural violations
 - You can see that:
-  - `application` depends on `domain` (correct in Clean Architecture)
-  - `infrastructure` depends on `domain` (this is actually a violation of Clean Architecture principles, highlighted in red)
-  - `presentation` depends on `application` (correct in Clean Architecture)
-  - `domain` has no dependencies (as expected in Clean Architecture)
+  - `application` depends on `domain` (✅ correct in Clean Architecture)
+  - `infrastructure` depends on `domain` (✅ correct in Clean Architecture - outer layers can depend on inner layers)
+  - `presentation` depends on `application` (✅ correct in Clean Architecture)
+  - `domain` depends on `infrastructure` (❌ **violation** - inner layers should not depend on outer layers)
+  - `presentation` depends on `infrastructure` (❌ **violation** - should go through application layer)
 
-Note: This example graph actually shows a violation of Clean Architecture. In proper Clean Architecture, infrastructure should not depend directly on domain but should implement interfaces defined in the domain layer, following the Dependency Inversion Principle. The sample project used to generate this graph doesn't strictly adhere to Clean Architecture principles, which is why we see this violation.
+The red arrows show actual Clean Architecture violations:
+
+1. **Domain → Infrastructure violation**: The domain layer (innermost) should never depend on the infrastructure layer (outermost). This violates the Dependency Rule which states that dependencies should only point inward.
+
+2. **Presentation → Infrastructure violation**: The presentation layer should not directly depend on the infrastructure layer. It should only depend on the application layer, which then coordinates with infrastructure through interfaces defined in the domain.
+
+These violations break the core principles of Clean Architecture:
+- **Dependency Rule**: Dependencies must point inward toward higher-level policies
+- **Separation of Concerns**: Each layer should have a single responsibility
+- **Dependency Inversion**: High-level modules should not depend on low-level modules
 
 The dependency graph visualizes package dependencies, making it easier to:
 - Identify architectural violations at a glance

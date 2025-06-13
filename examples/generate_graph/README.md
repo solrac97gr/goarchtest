@@ -28,12 +28,23 @@ go build -o graph-generator
 The dependency graph shows the relationships between packages in your project:
 
 - Each box represents a package in your project
-- Arrows show dependencies between packages
+- Arrows show dependencies between packages (arrow points to the dependency)
 - Normal dependencies are shown with black arrows
-- Architecture violations (e.g., infrastructure→domain dependencies) are highlighted with thick red arrows
+- Architecture violations are highlighted with thick red arrows
 - The direction of the arrow indicates which package depends on another
-- The direction of the arrow indicates which package depends on another
-- For clean architecture, domain should have no outgoing arrows
+
+### Clean Architecture Rules:
+- **✅ Correct**: Outer layers can depend on inner layers (e.g., infrastructure → domain)
+- **❌ Violation**: Inner layers should never depend on outer layers (e.g., domain → infrastructure)
+- **❌ Violation**: Layers should not skip levels (e.g., presentation → infrastructure directly)
+
+For Clean Architecture, you should see:
+- `domain` has no outgoing arrows (no dependencies)
+- `application` only depends on `domain`
+- `infrastructure` only depends on `domain` 
+- `presentation` only depends on `application`
+
+Red arrows indicate violations that need to be fixed to maintain proper architectural boundaries.
 
 ## Integrating in Your Own Code
 

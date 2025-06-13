@@ -16,6 +16,8 @@ digraph ArchitectureDependencies {
   node2 [label="infrastructure"];
   node3 [label="presentation"];
   node1 -> node0;
-  node2 -> node0 [color=red, penwidth=2.0];
+  node2 -> node0;
   node3 -> node1;
+  node0 -> node2 [color=red, penwidth=2.0];
+  node3 -> node2 [color=red, penwidth=2.0];
 }

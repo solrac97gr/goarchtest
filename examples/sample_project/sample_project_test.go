@@ -49,6 +49,41 @@ func TestSampleProject(t *testing.T) {
 
 	reporter.ReportError(result, "Domain should not depend on presentation layer")
 
+	// Test 2: Presentation should not directly depend on infrastructure
+	// This enforces that presentation goes through application layer
+	result = types.
+		That().
+		ResideInNamespace("presentation").
+		ShouldNot().
+		HaveDependencyOn("infrastructure").
+		GetResult()
+
+	reporter.ReportError(result, "Presentation should not directly depend on infrastructure (should go through application)")
+
+	// Test 3: Application can depend on domain (this is correct)
+	result = types.
+		That().
+		ResideInNamespace("application").
+		Should().
+		HaveDependencyOn("domain").
+		GetResult()
+
+	if !result.IsSuccessful {
+		reporter.ReportError(result, "Application should depend on domain layer")
+	}
+
+	// Test 4: Infrastructure can depend on domain (this is correct)
+	result = types.
+		That().
+		ResideInNamespace("infrastructure").
+		Should().
+		HaveDependencyOn("domain").
+		GetResult()
+
+	if !result.IsSuccessful {
+		reporter.ReportError(result, "Infrastructure should depend on domain layer for interfaces")
+	}
+
 	// Test 2: Application should only depend on domain
 	result = types.
 		That().
