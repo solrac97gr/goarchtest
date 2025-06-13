@@ -1,60 +1,72 @@
 package infrastructure
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
+	"sync"
 
-	_ "github.com/go-sql-driver/mysql" // MySQL driver
 	"github.com/solrac97gr/goarchtest/examples/sample_project/domain"
 )
 
-// SQLUserRepository implements the UserRepository interface using SQL
-type SQLUserRepository struct {
-	db *sql.DB
+// InMemoryUserRepository implements the UserRepository interface using an in-memory store
+type InMemoryUserRepository struct {
+	users map[string]*domain.User
+	mu    sync.RWMutex
 }
 
-// NewSQLUserRepository creates a new SQLUserRepository
-func NewSQLUserRepository(db *sql.DB) *SQLUserRepository {
-	return &SQLUserRepository{
-		db: db,
+// NewInMemoryUserRepository creates a new InMemoryUserRepository
+func NewInMemoryUserRepository() *InMemoryUserRepository {
+	return &InMemoryUserRepository{
+		users: make(map[string]*domain.User),
 	}
 }
 
-// GetByID retrieves a user by ID from the database
-func (r *SQLUserRepository) GetByID(id string) (*domain.User, error) {
-	query := "SELECT id, username, email FROM users WHERE id = ?"
-	row := r.db.QueryRow(query, id)
+// GetByID retrieves a user by ID from the in-memory store
+func (r *InMemoryUserRepository) GetByID(id string) (*domain.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
-	user := &domain.User{}
-	err := row.Scan(&user.ID, &user.Username, &user.Email)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("user with ID %s not found", id)
-		}
-		return nil, err
+	user, exists := r.users[id]
+	if !exists {
+		return nil, fmt.Errorf("user with ID %s not found", id)
 	}
 
-	return user, nil
+	// Return a copy to prevent mutation of the stored object
+	return &domain.User{
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+	}, nil
 }
 
-// Save saves a user to the database
-func (r *SQLUserRepository) Save(user *domain.User) error {
-	query := `
-		INSERT INTO users (id, username, email)
-		VALUES (?, ?, ?)
-		ON DUPLICATE KEY UPDATE
-			username = VALUES(username),
-			email = VALUES(email)
-	`
+// Save stores a user in the in-memory store
+func (r *InMemoryUserRepository) Save(user *domain.User) error {
+	if user.ID == "" {
+		return errors.New("user ID cannot be empty")
+	}
 
-	_, err := r.db.Exec(query, user.ID, user.Username, user.Email)
-	return err
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Store a copy to prevent mutation of the original object
+	r.users[user.ID] = &domain.User{
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+	}
+
+	return nil
 }
 
-// Delete deletes a user from the database
-func (r *SQLUserRepository) Delete(id string) error {
-	query := "DELETE FROM users WHERE id = ?"
-	_, err := r.db.Exec(query, id)
-	return err
+// Delete removes a user from the in-memory store
+func (r *InMemoryUserRepository) Delete(id string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.users[id]; !exists {
+		return fmt.Errorf("user with ID %s not found", id)
+	}
+
+	delete(r.users, id)
+	return nil
 }
