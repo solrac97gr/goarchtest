@@ -220,6 +220,16 @@ err := reporter.SaveDependencyGraph(allTypes, "architecture.dot")
 // dot -Tpng architecture.dot -o architecture.png
 ```
 
+Here's an example of how a dependency graph looks for a Clean Architecture project:
+
+![Dependency Graph Example](../examples/generate_graph/dependency_graph.png)
+
+This visualization clearly shows the dependency flow between packages, making it easier to:
+- Verify architectural boundaries
+- Identify violations (e.g., if domain depended on infrastructure)
+- Communicate architectural design to team members
+- Document the current state of your architecture
+
 ## Common Architectural Patterns and How to Test Them
 
 ### 1. Layered Architecture

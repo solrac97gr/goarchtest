@@ -215,6 +215,19 @@ For a complete working example, see the [dependency graph generation example](./
 - How to convert the DOT file to a PNG image using Graphviz
 - How to interpret the resulting dependency graph
 
+Here's an example of how a dependency graph looks for a project following Clean Architecture:
+
+![Dependency Graph Example](./examples/generate_graph/dependency_graph.png)
+
+In this graph:
+- Each box represents a package in your project
+- Arrows show dependencies between packages (arrow points to the dependency)
+- You can see that:
+  - `application` depends on `domain`
+  - `infrastructure` depends on `domain`
+  - `presentation` depends on `application`
+  - `domain` has no dependencies (as expected in Clean Architecture)
+
 The dependency graph visualizes package dependencies, making it easier to:
 - Identify architectural violations at a glance
 - Understand the overall structure of your project
