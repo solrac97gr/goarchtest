@@ -1,0 +1,11 @@
+digraph ArchitectureDependencies {
+  rankdir=TB;
+  node [shape=box, style=filled, fillcolor=lightblue];
+  node0 [label="domain"];
+  node1 [label="application"];
+  node2 [label="infrastructure"];
+  node3 [label="presentation"];
+  node1 -> node0;
+  node2 -> node0;
+  node3 -> node1;
+}

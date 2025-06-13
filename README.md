@@ -208,6 +208,19 @@ if err != nil {
 // dot -Tpng dependency_graph.dot -o dependency_graph.png
 ```
 
+For a complete working example, see the [dependency graph generation example](./examples/generate_graph) which demonstrates:
+
+- How to analyze a project and collect type information
+- How to generate a DOT file representing dependencies between packages
+- How to convert the DOT file to a PNG image using Graphviz
+- How to interpret the resulting dependency graph
+
+The dependency graph visualizes package dependencies, making it easier to:
+- Identify architectural violations at a glance
+- Understand the overall structure of your project
+- Detect circular dependencies
+- Verify compliance with architectural patterns like Clean Architecture
+
 ## Implementation Details
 
 GoArchTest uses modern Go tooling for reliable code analysis:
@@ -278,3 +291,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Real-World Examples and Best Practices](./docs/REAL_WORLD_EXAMPLES.md) - More detailed examples and best practices for using GoArchTest in real-world scenarios.
 - [Frequently Asked Questions (FAQ)](./docs/FAQ.md) - Answers to common questions about using GoArchTest.
 - [Error Handling Examples](./examples/error_handling/error_handling.go) - Examples of advanced error handling techniques.
+- [Dependency Graph Generation Example](./examples/generate_graph) - Example showing how to generate and visualize dependency graphs for your projects.
