@@ -215,7 +215,7 @@ For a complete working example, see the [dependency graph generation example](./
 - How to convert the DOT file to a PNG image using Graphviz
 - How to interpret the resulting dependency graph
 
-Here's an example of how a dependency graph looks for a project following Clean Architecture:
+Here's an example of how a dependency graph looks for a project that should be following Clean Architecture:
 
 ![Dependency Graph Example](./examples/generate_graph/dependency_graph.png)
 
