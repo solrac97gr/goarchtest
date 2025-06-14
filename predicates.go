@@ -21,7 +21,7 @@ func (ts *TypeSet) ResideInNamespace(namespace string) *TypeSet {
 
 	var filteredTypes []*TypeInfo
 	for _, t := range ts.types {
-		if strings.Contains(t.Package, namespace) {
+		if t.FullPath == namespace || strings.HasPrefix(t.FullPath, namespace+"/") {
 			filteredTypes = append(filteredTypes, t)
 		}
 	}
@@ -49,7 +49,8 @@ func (ts *TypeSet) HaveDependencyOn(dependency string) *TypeSet {
 	var filteredTypes []*TypeInfo
 	for _, t := range ts.types {
 		for _, imp := range t.Imports {
-			if strings.Contains(imp, dependency) {
+			// Exact match or prefix match with a slash to ensure complete package path
+			if imp == dependency || strings.HasPrefix(imp, dependency+"/") {
 				filteredTypes = append(filteredTypes, t)
 				break
 			}
@@ -185,9 +186,8 @@ func (ts *TypeSet) Should() *TypeSet {
 //	ts.ShouldNot().HaveDependencyOn("github.com/some/dependency").BeStruct()
 func (ts *TypeSet) ShouldNot() *TypeSet {
 	ts.currentPredicate = "ShouldNot"
-	// Store the current types for later reference
-	originalTypes := ts.types
-	ts.originalTypes = originalTypes
+	// Store the current types for later reference and set a flag
+	ts.matchedPredicates = append(ts.matchedPredicates, "Negate")
 	return ts
 }
 

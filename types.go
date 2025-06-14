@@ -145,7 +145,24 @@ func (ts *TypeSet) GetResult() *Result {
 		}
 	}
 
-	// The result is successful if we have matching types
+	// Check if we have a negation in the predicates
+	shouldNegate := false
+	for _, pred := range ts.matchedPredicates {
+		if pred == "Negate" {
+			shouldNegate = true
+			break
+		}
+	}
+
+	// If we're negating, the result is successful if we have NO matching types
+	if shouldNegate {
+		return &Result{
+			IsSuccessful: len(ts.types) == 0,
+			FailingTypes: ts.types, // If we're negating, the failing types are the ones that matched
+		}
+	}
+
+	// Otherwise, the result is successful if we have matching types
 	return &Result{
 		IsSuccessful: len(ts.types) > 0,
 		FailingTypes: ts.getFailingTypes(),

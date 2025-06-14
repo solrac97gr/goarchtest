@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -26,6 +27,16 @@ func TestCleanArchitecture(t *testing.T) {
 	// Validate the architecture
 	validationResults := cleanArch.Validate(goarchtest.InPath(projectPath))
 
+	// Debug: Print all packages first
+	types := goarchtest.InPath(projectPath)
+	allTypes := types.That().GetAllTypes()
+	fmt.Println("All types found:")
+	for _, t := range allTypes {
+		fmt.Printf("- %s in package %s\n", t.Name, t.Package)
+		fmt.Printf("  - Full path: %s\n", t.FullPath)
+		fmt.Printf("  - Imports: %v\n", t.Imports)
+	}
+
 	// Check if any validation rules failed
 	for _, result := range validationResults {
 		if !result.IsSuccessful {
@@ -34,6 +45,10 @@ func TestCleanArchitecture(t *testing.T) {
 				t.Logf("  - %s in package %s", failingType.Name, failingType.Package)
 				t.Logf("  - Full path: %s", failingType.FullPath)
 				t.Logf("  - Imports: %v", failingType.Imports)
+				t.Logf("  - Is Struct: %v", failingType.IsStruct)
+				if len(failingType.Interfaces) > 0 {
+					t.Logf("  - Interfaces: %v", failingType.Interfaces)
+				}
 			}
 		}
 	}
