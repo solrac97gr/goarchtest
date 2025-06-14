@@ -214,6 +214,49 @@ if !result.IsSuccessful {
     t.Error("Repository implementations should end with 'Repository'")
 }
 ```
+
+```go
+// Find all services using name pattern matching
+result := types.InPath(projectPath).
+    That().
+    HaveNameMatching(".*Service").
+    Should().
+    ResideInNamespace("services").
+    GetResult()
+    
+if !result.IsSuccessful {
+    t.Error("All services should be in the services package")
+}
+```
+
+```go
+// Find all handlers that start with "User"
+result := types.InPath(projectPath).
+    That().
+    HaveNameStartingWith("User").
+    And().
+    HaveNameEndingWith("Handler").
+    Should().
+    ResideInNamespace("handlers").
+    GetResult()
+    
+if !result.IsSuccessful {
+    t.Error("User handlers should be in handlers package")
+}
+```
+
+```go
+// Ensure interfaces are properly separated
+result := types.InPath(projectPath).
+    That().
+    AreInterfaces().
+    Should().
+    ResideInNamespace("ports").
+    GetResult()
+    
+if !result.IsSuccessful {
+    t.Error("Interfaces should be in ports package")
+}
 ```
 
 ```go
@@ -378,7 +421,9 @@ GoArchTest uses modern Go tooling for reliable code analysis:
 - `HaveDependencyOn(dependency string)` - Types that have a dependency on the specified package
 - `ImplementInterface(interfaceName string)` - Types that implement the specified interface
 - `BeStruct()` - Types that are structs
+- `AreInterfaces()` - Types that are interfaces
 - `NameMatch(pattern string)` - Types with names that match the specified regex pattern
+- `HaveNameMatching(pattern string)` - Alias for NameMatch for better readability
 - `HaveNameEndingWith(suffix string)` - Types with names that end with the specified suffix
 - `HaveNameStartingWith(prefix string)` - Types with names that start with the specified prefix
 - `ResideInDirectory(directory string)` - Types that reside in the specified directory
@@ -402,6 +447,8 @@ GoArchTest includes support for common architectural patterns:
 - **Layered Architecture** - Enforces rules for a traditional n-tier architecture
 - **MVC Architecture** - Enforces rules for model, view, and controller components
 - **DDD with Clean Architecture** - Enforces Domain-Driven Design with Clean Architecture within each bounded context
+- **CQRS Architecture** - Enforces Command Query Responsibility Segregation patterns
+- **Event Sourced CQRS Architecture** - Enforces Event Sourcing with CQRS patterns
 
 For a practical example of using predefined architecture patterns, see [defined architecture example](./examples/defined_architecture.go).
 
@@ -414,6 +461,43 @@ GoArchTest includes tools for reporting and visualizing architecture test result
 - **Reporter** - Generates HTML or text reports of test results
 - **ErrorReporter** - Reports errors to a specified writer (e.g., stderr)
 - **Dependency Graph Generation** - Creates DOT format graphs for visualization with Graphviz
+
+## Continuous Integration
+
+GoArchTest includes GitHub Actions workflows for automated testing and validation. The project includes:
+
+- **Automated Testing**: Runs all tests on multiple Go versions
+- **Dependency Management**: Caches Go modules for faster builds
+- **Multi-Environment Testing**: Tests across different test directories and examples
+
+### Setting up CI/CD for Your Project
+
+To integrate GoArchTest into your CI/CD pipeline, add architectural tests to your regular test suite:
+
+```yaml
+# .github/workflows/test.yml
+name: Tests
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: ['*']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v4
+      with:
+        go-version: '1.24.x'
+    
+    - name: Run architecture tests
+      run: go test -v ./...
+```
+
+This ensures that architectural violations are caught early in the development process and prevents architectural drift.
 
 ## Contributing
 
