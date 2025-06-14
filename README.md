@@ -5,6 +5,10 @@ GoArchTest is a Go library for testing the architectural constraints of your Go 
 ## Installation
 
 ```bash
+# Install the latest pre-release version
+go get github.com/solrac97gr/goarchtest@v0.1.0-alpha.1
+
+# Or install the latest version (when stable releases are available)
 go get github.com/solrac97gr/goarchtest
 ```
 
