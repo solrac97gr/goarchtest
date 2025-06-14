@@ -24,7 +24,22 @@ type TypeSet struct {
 	matchedPredicates []string
 }
 
-// TypeInfo contains information about a Go type
+// TypeInfo contains comprehensive information about a Go type.
+//
+// This structure holds all the metadata needed for architectural analysis,
+// including the type's name, location, dependencies, and structural characteristics.
+//
+// Fields:
+//   - Name: The name of the type (e.g., "UserService")
+//   - Package: The package name where the type is defined (e.g., "services")  
+//   - FullPath: The full import path (e.g., "github.com/myorg/myapp/services")
+//   - Imports: All import paths that this type's package depends on
+//   - Interfaces: For interface types, the method names defined in the interface
+//   - IsStruct: true if this type is a struct
+//   - IsInterface: true if this type is an interface
+//
+// TypeInfo is used throughout GoArchTest's predicate system to make architectural
+// decisions and validate constraints.
 type TypeInfo struct {
 	Name        string
 	Package     string
@@ -35,7 +50,34 @@ type TypeInfo struct {
 	IsInterface bool
 }
 
-// InPath creates a new Types instance for packages in the specified directory path
+// InPath creates a new Types instance for packages in the specified directory path.
+//
+// This is the primary entry point for GoArchTest. It analyzes all Go packages
+// found recursively in the given directory path and prepares them for architectural testing.
+//
+// Parameters:
+//   - path: The directory path to analyze. Use "." for current directory or provide an absolute path.
+//
+// Returns:
+//   - *Types: A Types instance containing all discovered types, ready for filtering and testing.
+//
+// Example:
+//
+//	// Analyze current project
+//	types := goarchtest.InPath("./")
+//	
+//	// Analyze specific directory
+//	types := goarchtest.InPath("/path/to/project")
+//	
+//	// Start testing architecture
+//	result := types.That().
+//	    ResideInNamespace("domain").
+//	    ShouldNot().
+//	    HaveDependencyOn("infrastructure").
+//	    GetResult()
+//
+// The function uses Go's package loading mechanism to extract comprehensive
+// type information including names, packages, imports, and structural details.
 func InPath(path string) *Types {
 	cfg := &packages.Config{
 		Mode: packages.NeedName | packages.NeedTypes | packages.NeedSyntax | packages.NeedTypesInfo | packages.NeedImports,
@@ -137,7 +179,24 @@ func (ts *TypeSet) That() *TypeSet {
 	return ts
 }
 
-// Result represents the outcome of architecture tests
+// Result represents the outcome of architecture tests.
+//
+// It contains information about whether the architectural rule passed or failed,
+// along with details about any types that violated the rule.
+//
+// Fields:
+//   - IsSuccessful: true if the architectural test passed, false otherwise
+//   - FailingTypes: slice of TypeInfo for types that didn't meet the criteria
+//
+// Example usage:
+//
+//	result := types.That().ResideInNamespace("domain").GetResult()
+//	if !result.IsSuccessful {
+//	    fmt.Printf("Found %d violations\n", len(result.FailingTypes))
+//	    for _, failing := range result.FailingTypes {
+//	        fmt.Printf("- %s in %s\n", failing.Name, failing.Package)
+//	    }
+//	}
 type Result struct {
 	IsSuccessful bool
 	FailingTypes []*TypeInfo

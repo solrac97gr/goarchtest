@@ -45,7 +45,40 @@ type ValidationResult struct {
 	FailingTypes    []*TypeInfo
 }
 
-// CleanArchitecture defines the Clean Architecture pattern (also known as Onion Architecture)
+// CleanArchitecture defines the Clean Architecture pattern (also known as Onion Architecture).
+//
+// Clean Architecture enforces the Dependency Rule: dependencies must point inward toward
+// higher-level policies. The domain layer should not depend on any other layer, and
+// outer layers can only depend on inner layers.
+//
+// Parameters:
+//   - domainNamespace: The namespace/package containing domain entities and business rules
+//   - applicationNamespace: The namespace/package containing application services and use cases  
+//   - infrastructureNamespace: The namespace/package containing external concerns (database, web, etc.)
+//   - presentationNamespace: The namespace/package containing UI/API controllers and handlers
+//
+// Returns:
+//   - *ArchitecturePattern: A pattern that validates Clean Architecture constraints
+//
+// Example:
+//
+//	// Define Clean Architecture for your project
+//	pattern := goarchtest.CleanArchitecture("domain", "application", "infrastructure", "presentation")
+//	
+//	// Validate against your codebase
+//	results := pattern.Validate(types)
+//	
+//	// Check results
+//	for _, result := range results {
+//	    if !result.IsSuccessful {
+//	        fmt.Printf("Violation: %s\n", result.RuleDescription)
+//	    }
+//	}
+//
+// The generated pattern validates these key constraints:
+//   - Domain layer cannot depend on application, infrastructure, or presentation layers
+//   - Application layer cannot depend on infrastructure or presentation layers  
+//   - Presentation layer cannot depend on infrastructure layer (should go through application)
 func CleanArchitecture(domainNamespace, applicationNamespace, infrastructureNamespace, presentationNamespace string) *ArchitecturePattern {
 	return &ArchitecturePattern{
 		Name: "Clean Architecture",
