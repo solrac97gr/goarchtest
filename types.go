@@ -26,12 +26,13 @@ type TypeSet struct {
 
 // TypeInfo contains information about a Go type
 type TypeInfo struct {
-	Name       string
-	Package    string
-	FullPath   string
-	Imports    []string
-	Interfaces []string
-	IsStruct   bool
+	Name        string
+	Package     string
+	FullPath    string
+	Imports     []string
+	Interfaces  []string
+	IsStruct    bool
+	IsInterface bool
 }
 
 // InPath creates a new Types instance for packages in the specified directory path
@@ -103,11 +104,17 @@ func extractTypesFromPackages(pkgs []*packages.Package) *TypeSet {
 						typeInfo.IsStruct = true
 					}
 
-					// Check if it implements interfaces
+					// Check if it's an interface
 					if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
-						for _, method := range interfaceType.Methods.List {
-							for _, name := range method.Names {
-								typeInfo.Interfaces = append(typeInfo.Interfaces, name.Name)
+						typeInfo.IsInterface = true
+						// Collect method names from the interface
+						if interfaceType.Methods != nil {
+							for _, method := range interfaceType.Methods.List {
+								if method.Names != nil {
+									for _, name := range method.Names {
+										typeInfo.Interfaces = append(typeInfo.Interfaces, name.Name)
+									}
+								}
 							}
 						}
 					}

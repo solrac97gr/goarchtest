@@ -184,3 +184,45 @@ func (ts *TypeSet) DoNotHaveDependencyOn(dependency string) *TypeSet {
 	ts.matchedPredicates = append(ts.matchedPredicates, ts.currentPredicate)
 	return ts
 }
+
+// HaveNameMatching filters types based on a regex pattern match on their names.
+// This is an alias for NameMatch for better readability in test scenarios.
+//
+// Parameters:
+//   - pattern: A string representing the regex pattern to match against type names
+//
+// Returns:
+//   - *TypeSet: Returns the filtered TypeSet containing only types whose names match the pattern,
+//     allowing for method chaining
+//
+// Example:
+//
+//	typeSet.HaveNameMatching(".*Service")
+func (ts *TypeSet) HaveNameMatching(pattern string) *TypeSet {
+	return ts.NameMatch(pattern)
+}
+
+// AreInterfaces filters types that are interfaces
+// It allows for filtering based on whether the type is an interface.
+// Returns:
+//   - *TypeSet: Returns the filtered TypeSet containing only interface types,
+//     allowing for method chaining
+//
+// Example:
+//
+//	typeSet.AreInterfaces()
+func (ts *TypeSet) AreInterfaces() *TypeSet {
+	ts.currentPredicate = "AreInterfaces"
+
+	var filteredTypes []*TypeInfo
+	for _, t := range ts.types {
+		// Check if it's an interface using the IsInterface field
+		if t.IsInterface {
+			filteredTypes = append(filteredTypes, t)
+		}
+	}
+
+	ts.types = filteredTypes
+	ts.matchedPredicates = append(ts.matchedPredicates, ts.currentPredicate)
+	return ts
+}
