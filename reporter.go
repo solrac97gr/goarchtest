@@ -20,22 +20,29 @@ func NewReporter() *Reporter {
 	}
 }
 
-// AddResult adds a test result to the reporter
+// AddResult appends a Result to the Reporter.
+// It allows the Reporter to accumulate results from multiple tests,
+// which can then be used to generate a comprehensive report.
+//
+// Parameters:
+//   - result: A pointer to a Result object containing the test outcome and details
 func (r *Reporter) AddResult(result *Result) {
 	r.Results = append(r.Results, result)
 }
 
-// GenerateTextReport generates a plain text report
+// GenerateTextReport generates a text report of the architecture test results.
+// It summarizes the test outcomes, including the number of passed and failed tests,
+// and details about any failing types.
 func (r *Reporter) GenerateTextReport() string {
 	var report strings.Builder
-	
+
 	report.WriteString("GoArchTest Report\n")
 	report.WriteString("================\n\n")
 	report.WriteString(fmt.Sprintf("Date: %s\n\n", time.Now().Format("2006-01-02 15:04:05")))
-	
+
 	passCount := 0
 	failCount := 0
-	
+
 	for i, result := range r.Results {
 		if result.IsSuccessful {
 			passCount++
@@ -44,24 +51,28 @@ func (r *Reporter) GenerateTextReport() string {
 			failCount++
 			report.WriteString(fmt.Sprintf("Test #%d: FAIL\n", i+1))
 			report.WriteString("Failing Types:\n")
-			
+
 			for _, failingType := range result.FailingTypes {
 				report.WriteString(fmt.Sprintf("  - %s in package %s\n", failingType.Name, failingType.Package))
 			}
-			
+
 			report.WriteString("\n")
 		}
 	}
-	
+
 	report.WriteString(fmt.Sprintf("\nSummary: %d passed, %d failed\n", passCount, failCount))
-	
+
 	return report.String()
 }
 
 // GenerateHTMLReport generates an HTML report
+// of the architecture test results.
+// It provides a structured and styled representation of the test outcomes,
+// including the number of passed and failed tests,
+// and details about any failing types in a visually appealing format.
 func (r *Reporter) GenerateHTMLReport() string {
 	var report strings.Builder
-	
+
 	report.WriteString(`<!DOCTYPE html>
 <html>
 <head>
@@ -107,13 +118,13 @@ func (r *Reporter) GenerateHTMLReport() string {
 <body>
     <h1>GoArchTest Report</h1>
     <p>Date: `)
-	
+
 	report.WriteString(time.Now().Format("2006-01-02 15:04:05"))
 	report.WriteString(`</p>`)
-	
+
 	passCount := 0
 	failCount := 0
-	
+
 	for i, result := range r.Results {
 		if result.IsSuccessful {
 			passCount++
@@ -129,33 +140,35 @@ func (r *Reporter) GenerateHTMLReport() string {
         <div class="failing-types">
             <strong>Failing Types:</strong>
             <ul>`, i+1))
-			
+
 			for _, failingType := range result.FailingTypes {
 				report.WriteString(fmt.Sprintf(`
                 <li>%s in package %s</li>`, failingType.Name, failingType.Package))
 			}
-			
+
 			report.WriteString(`
             </ul>
         </div>
     </div>`)
 		}
 	}
-	
+
 	report.WriteString(fmt.Sprintf(`
     <div class="summary">
         <strong>Summary:</strong> %d passed, %d failed
     </div>
 </body>
 </html>`, passCount, failCount))
-	
+
 	return report.String()
 }
 
 // SaveReport saves a report to a file
+// It allows the user to specify the type of report (text or HTML)
+// and the output path where the report should be saved.
 func (r *Reporter) SaveReport(reportType string, outputPath string) error {
 	var content string
-	
+
 	switch strings.ToLower(reportType) {
 	case "text":
 		content = r.GenerateTextReport()
@@ -164,13 +177,13 @@ func (r *Reporter) SaveReport(reportType string, outputPath string) error {
 	default:
 		return fmt.Errorf("unsupported report type: %s", reportType)
 	}
-	
+
 	// Ensure the directory exists
 	dir := filepath.Dir(outputPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
-	
+
 	// Write the report to file
 	return os.WriteFile(outputPath, []byte(content), 0644)
 }
