@@ -18,31 +18,40 @@ func CustomArchitecturePattern(t *testing.T) {
 
 	microservicesPattern := &goarchtest.ArchitecturePattern{
 		Name: "Microservices Pattern",
-		Rules: []func(*goarchtest.Types) *goarchtest.Result{
+		Rules: []goarchtest.Rule{
 			// Services should be independent from each other
-			func(types *goarchtest.Types) *goarchtest.Result {
-				return types.That().
-					ResideInNamespace("services/user").
-					ShouldNot().
-					HaveDependencyOn("services/product").
-					GetResult()
+			{
+				Description: "User service should not depend on product service",
+				Validate: func(types *goarchtest.Types) *goarchtest.Result {
+					return types.That().
+						ResideInNamespace("services/user").
+						ShouldNot().
+						HaveDependencyOn("services/product").
+						GetResult()
+				},
 			},
-			func(types *goarchtest.Types) *goarchtest.Result {
-				return types.That().
-					ResideInNamespace("services/product").
-					ShouldNot().
-					HaveDependencyOn("services/user").
-					GetResult()
+			{
+				Description: "Product service should not depend on user service",
+				Validate: func(types *goarchtest.Types) *goarchtest.Result {
+					return types.That().
+						ResideInNamespace("services/product").
+						ShouldNot().
+						HaveDependencyOn("services/user").
+						GetResult()
+				},
 			},
 			// Services should communicate via API clients
-			func(types *goarchtest.Types) *goarchtest.Result {
-				return types.That().
-					ResideInNamespace("services").
-					And().
-					HaveDependencyOn("services").
-					Should().
-					HaveDependencyOn("api/client").
-					GetResult()
+			{
+				Description: "Services should communicate via API clients",
+				Validate: func(types *goarchtest.Types) *goarchtest.Result {
+					return types.That().
+						ResideInNamespace("services").
+						And().
+						HaveDependencyOn("services").
+						Should().
+						HaveDependencyOn("api/client").
+						GetResult()
+				},
 			},
 		},
 	}
