@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -121,17 +120,6 @@ func TestHexagonalArchitecture(t *testing.T) {
 
 	// Validate the architecture
 	validationResults := hexagonalPattern.Validate(goarchtest.InPath(projectPath))
-
-	// Debug: Print all packages first
-	types := goarchtest.InPath(projectPath)
-	allTypes := types.That().GetAllTypes()
-	fmt.Println("All types found:")
-	for _, t := range allTypes {
-		fmt.Printf("- %s in package %s\n", t.Name, t.Package)
-		fmt.Printf("  - Full path: %s\n", t.FullPath)
-		fmt.Printf("  - Imports: %v\n", t.Imports)
-		fmt.Printf("  - Is Struct: %v, Is Interface: %v\n", t.IsStruct, t.IsInterface)
-	}
 
 	// Report validation results
 	reporter.ReportPatternValidation(validationResults)

@@ -18,14 +18,6 @@ func TestCustomPredicates(t *testing.T) {
 
 	types := goarchtest.InPath(projectPath)
 
-	// Debug: Print all types first
-	allTypes := types.That().GetAllTypes()
-	fmt.Printf("=== DEBUG: All types found ===\n")
-	for _, t := range allTypes {
-		fmt.Printf("- %s in package %s (path: %s)\n", t.Name, t.Package, t.FullPath)
-	}
-	fmt.Printf("=== END DEBUG ===\n\n")
-
 	// Test 1: Find all handlers/controllers (demonstrating HaveNameEndingWith)
 	t.Run("Find all handlers and controllers", func(t *testing.T) {
 		handlers := types.That().
