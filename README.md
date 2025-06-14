@@ -35,7 +35,7 @@ func TestArchitecture(t *testing.T) {
 ```
 
 > **💡 Why do I need this when Go prevents import cycles?** 
-> Go only prevents circular dependencies (A→B→A), but allows architectural violations like inner layers depending on outer layers (domain→infrastructure). GoArchTest enforces proper architectural boundaries that Go's compiler cannot check. [Learn more →](./examples/import_cycles_vs_architecture)
+> Go only prevents circular dependencies (A→B→A), but allows architectural violations like inner layers depending on outer layers (domain→infrastructure). GoArchTest enforces proper architectural boundaries that Go's compiler cannot check.
 
 ## Why GoArchTest?
 
@@ -145,8 +145,6 @@ func TestCleanArchitecture(t *testing.T) {
 
 GoArchTest bridges the gap between what Go's compiler enforces (import cycles) and what good software architecture requires (proper layer separation, dependency direction, and bounded contexts).
 
-**📚 For a detailed practical example of these concepts, see [Import Cycles vs Architectural Violations Example](./examples/import_cycles_vs_architecture)**
-
 ## Detailed Usage Guide
 
 ```go
@@ -216,60 +214,6 @@ if !result.IsSuccessful {
     t.Error("Repository implementations should end with 'Repository'")
 }
 ```
-
-#### Testing DDD with Clean Architecture
-
-```go
-// Test Domain-Driven Design with Clean Architecture
-// This pattern enforces:
-// 1. Bounded context isolation (no cross-domain dependencies) 
-// 2. Clean Architecture within each domain
-// 3. Proper shared kernel usage
-
-func TestDDDArchitecture(t *testing.T) {
-    projectPath, _ := filepath.Abs("./")
-    types := goarchtest.InPath(projectPath)
-    
-    // Define your bounded contexts (domains)
-    domains := []string{"user", "products", "orders"}
-    
-    // Test the complete DDD pattern
-    dddPattern := goarchtest.DDDWithCleanArchitecture(
-        domains,           // List of domain names
-        "internal/shared", // Shared kernel namespace  
-        "pkg",            // Utility packages namespace
-    )
-    
-    validationResults := dddPattern.Validate(types)
-    
-    // Check results
-    for i, result := range validationResults {
-        if !result.IsSuccessful {
-            t.Errorf("DDD Rule #%d failed", i+1)
-            for _, failingType := range result.FailingTypes {
-                t.Logf("Violation: %s (%s)", failingType.Name, failingType.Package)
-            }
-        }
-    }
-}
-
-// Test individual DDD rules
-func TestBoundedContextIsolation(t *testing.T) {
-    projectPath, _ := filepath.Abs("./")
-    types := goarchtest.InPath(projectPath)
-    
-    // User domain should not depend on products domain
-    result := types.
-        That().
-        ResideInNamespace("internal/user").
-        ShouldNot().
-        HaveDependencyOn("internal/products").
-        GetResult()
-        
-    if !result.IsSuccessful {
-        t.Error("Bounded context violation: User domain depends on products domain")
-    }
-}
 ```
 
 ```go
@@ -288,6 +232,8 @@ if !result.IsSuccessful {
 }
 ```
 
+For more specific validation examples, see [specific validation example](./examples/specific_validation.go).
+
 ### Using Predefined Architecture Patterns
 
 GoArchTest provides helper functions for common architectural patterns:
@@ -297,16 +243,12 @@ GoArchTest provides helper functions for common architectural patterns:
 cleanArchPattern := goarchtest.CleanArchitecture("domain", "application", "infrastructure", "presentation")
 validationResults := cleanArchPattern.Validate(types)
 
-// Test DDD with Clean Architecture pattern  
-domains := []string{"user", "products", "orders"}
-dddPattern := goarchtest.DDDWithCleanArchitecture(domains, "internal/shared", "pkg")
-dddResults := dddPattern.Validate(types)
-
 // Report results
 reporter := goarchtest.NewErrorReporter(os.Stderr)
 reporter.ReportPatternValidation(validationResults)
-reporter.ReportPatternValidation(dddResults)
 ```
+
+See the [defined architecture example](./examples/defined_architecture.go) for a complete example.
 
 ### Custom Predicates
 
@@ -329,6 +271,8 @@ result := types.
     ResideInNamespace("application").
     GetResult()
 ```
+
+For a complete example, see [custom predicate example](./examples/custom_predicate.go).
 
 ### Generating Reports
 
@@ -370,17 +314,16 @@ if err != nil {
 // dot -Tpng dependency_graph.dot -o dependency_graph.png
 ```
 
-For a complete working example, see the [dependency graph generation example](./examples/generate_graph) which demonstrates:
+For a complete working example, see the [dependency graph generation example](./examples/generate_graph.go) which demonstrates:
 
 - How to analyze a project and collect type information
 - How to generate a DOT file representing dependencies between packages
 - How to convert the DOT file to a PNG image using Graphviz
 - How to interpret the resulting dependency graph
-- **How architectural violations appear in the graph** (the example includes intentional violations)
 
 Here's an example of how a dependency graph looks for a project that violates Clean Architecture principles:
 
-![Dependency Graph Example](./examples/generate_graph/dependency_graph.png)
+![Dependency Graph Example](./images/dependency_graph.png)
 
 In this graph:
 - Each box represents a package in your project
@@ -460,6 +403,10 @@ GoArchTest includes support for common architectural patterns:
 - **MVC Architecture** - Enforces rules for model, view, and controller components
 - **DDD with Clean Architecture** - Enforces Domain-Driven Design with Clean Architecture within each bounded context
 
+For a practical example of using predefined architecture patterns, see [defined architecture example](./examples/defined_architecture.go).
+
+You can also create custom architecture patterns as shown in the [custom architecture example](./examples/custom_architecture.go).
+
 ## Reporting and Visualization
 
 GoArchTest includes tools for reporting and visualizing architecture test results:
@@ -478,11 +425,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Further Documentation
 
-- [Real-World Examples and Best Practices](./docs/REAL_WORLD_EXAMPLES.md) - More detailed examples and best practices for using GoArchTest in real-world scenarios.
 - [Frequently Asked Questions (FAQ)](./docs/FAQ.md) - Answers to common questions about using GoArchTest, including why you need it when Go prevents import cycles.
-- [Import Cycles vs Architectural Violations](./examples/import_cycles_vs_architecture) - **NEW!** Explains the key difference between what Go's compiler prevents and what GoArchTest prevents.
-- [DDD with Clean Architecture](./examples/ddd_clean_architecture) - **NEW!** Example of Domain-Driven Design with Clean Architecture using bounded contexts.
-- [Error Handling Examples](./examples/error_handling/error_handling.go) - Examples of advanced error handling techniques.
-- [Dependency Graph Generation Example](./examples/generate_graph) - Example showing how to generate and visualize dependency graphs for your projects.
-- [Clean Architecture Example](./examples/clean_architecture) - Comprehensive example of testing Clean Architecture patterns.
-- [Custom Predicates Example](./examples/custom_predicates) - How to create and use custom architectural rules.
+- [Real-World Examples and Best Practices](./docs/REAL_WORLD_EXAMPLES.md) - More detailed examples and best practices for using GoArchTest in real-world scenarios.
+
+## Examples
+
+- [Generate Graph](./examples/generate_graph.go) - Example showing how to generate and visualize dependency graphs for your projects.
+- [Custom Architecture](./examples/custom_architecture.go) - How to create and use custom architecture patterns.
+- [Defined Architecture](./examples/defined_architecture.go) - Using predefined architecture patterns like Clean Architecture.
+- [Custom Predicate](./examples/custom_predicate.go) - How to create and use custom architectural rules with predicates.
+- [Specific Validation](./examples/specific_validation.go) - Specific validation examples for common architectural concerns.
