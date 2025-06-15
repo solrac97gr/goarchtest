@@ -374,41 +374,9 @@ func DDDWithCleanArchitecture(domains []string, sharedNamespace, pkgNamespace st
 		}
 	}
 
-	// Rule 3: Only domain layers can depend on shared namespace (shared kernel)
-	if sharedNamespace != "" {
-		for _, domain := range domains {
-			applicationNS := fmt.Sprintf("internal/%s/application", domain)
-			infrastructureNS := fmt.Sprintf("internal/%s/infrastructure", domain)
-
-			// Application should not depend on shared (only domain can)
-			rules = append(rules, Rule{
-				Description: fmt.Sprintf("Application layer (%s) should not depend on shared kernel (%s)", applicationNS, sharedNamespace),
-				Validate: func(applicationNS, sharedNS string) func(*Types) *Result {
-					return func(types *Types) *Result {
-						return types.That().
-							ResideInNamespace(applicationNS).
-							ShouldNot().
-							HaveDependencyOn(sharedNS).
-							GetResult()
-					}
-				}(applicationNS, sharedNamespace),
-			})
-
-			// Infrastructure should not depend on shared (only domain can)
-			rules = append(rules, Rule{
-				Description: fmt.Sprintf("Infrastructure layer (%s) should not depend on shared kernel (%s)", infrastructureNS, sharedNamespace),
-				Validate: func(infrastructureNS, sharedNS string) func(*Types) *Result {
-					return func(types *Types) *Result {
-						return types.That().
-							ResideInNamespace(infrastructureNS).
-							ShouldNot().
-							HaveDependencyOn(sharedNS).
-							GetResult()
-					}
-				}(infrastructureNS, sharedNamespace),
-			})
-		}
-	}
+	// Rule 3: Shared kernel can be used by any layer (this is the purpose of shared kernel in DDD)
+	// No restrictions - shared kernel is meant to be shared across bounded contexts and layers
+	// Note: We don't add restrictive rules here because shared kernel is designed to be widely accessible
 
 	return &ArchitecturePattern{
 		Name:  fmt.Sprintf("DDD with Clean Architecture (domains: %s)", strings.Join(domains, ", ")),
