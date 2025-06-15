@@ -67,6 +67,19 @@ jobs:
         fi
         go mod tidy
         cd ../..
+
+        # Setup go.mod for ddd-clean-architecture test
+        cd test/ddd-clean-architecture
+        if [ ! -s go.mod ]; then
+          echo "module github.com/solrac97gr/goarchtest/test/ddd-clean-architecture" > go.mod
+          echo "go 1.24.1" >> go.mod
+          echo "" >> go.mod
+          echo "replace github.com/solrac97gr/goarchtest => ../.." >> go.mod
+          echo "" >> go.mod
+          echo "require github.com/solrac97gr/goarchtest v0.0.0-00010101000000-000000000000" >> go.mod
+        fi
+        go mod tidy
+        cd ../..
         
         # Clean architecture already has proper go.mod
         cd test/clean-architecture
