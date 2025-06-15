@@ -10,7 +10,7 @@
 //
 //	func TestArchitecture(t *testing.T) {
 //	    projectPath, _ := filepath.Abs("./")
-//	    
+//
 //	    // Test that presentation layer doesn't depend on data layer
 //	    result := goarchtest.InPath(projectPath).
 //	        That().
@@ -18,7 +18,7 @@
 //	        ShouldNot().
 //	        HaveDependencyOn("data").
 //	        GetResult()
-//	        
+//
 //	    if !result.IsSuccessful {
 //	        t.Error("Architecture violation: Presentation layer depends on data layer")
 //	        for _, failingType := range result.FailingTypes {
@@ -42,7 +42,7 @@
 //	isService := func(typeInfo *goarchtest.TypeInfo) bool {
 //	    return typeInfo.IsStruct && strings.HasSuffix(typeInfo.Name, "Service")
 //	}
-//	
+//
 //	result := types.That().
 //	    WithCustomPredicate("IsService", isService).
 //	    Should().
@@ -52,7 +52,7 @@
 // # Supported Patterns
 //
 // - Clean Architecture
-// - Hexagonal Architecture  
+// - Hexagonal Architecture
 // - Layered Architecture
 // - MVC Architecture
 // - DDD with Clean Architecture
