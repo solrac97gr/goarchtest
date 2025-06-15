@@ -101,6 +101,11 @@ jobs:
         cd test/clean-architecture
         go test -v ./...
 
+    - name: Run ddd-clean-architecture tests
+      run: |
+        cd test/ddd-clean-architecture
+        go test -v ./...
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
