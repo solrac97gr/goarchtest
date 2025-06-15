@@ -21,14 +21,34 @@ func (ts *TypeSet) ResideInNamespace(namespace string) *TypeSet {
 
 	var filteredTypes []*TypeInfo
 	for _, t := range ts.types {
-		if t.FullPath == namespace || strings.HasPrefix(t.FullPath, namespace+"/") {
+		// Check exact match first
+		if t.FullPath == namespace {
 			filteredTypes = append(filteredTypes, t)
+			continue
+		}
+		
+		// Check if namespace matches the end of the FullPath (relative path matching)
+		if strings.HasSuffix(t.FullPath, "/"+namespace) || strings.Contains(t.FullPath, "/"+namespace+"/") {
+			filteredTypes = append(filteredTypes, t)
+			continue
+		}
+		
+		// Also check prefix match for full paths
+		if strings.HasPrefix(t.FullPath, namespace+"/") {
+			filteredTypes = append(filteredTypes, t)
+			continue
 		}
 	}
 
-	ts.types = filteredTypes
-	ts.matchedPredicates = append(ts.matchedPredicates, ts.currentPredicate)
-	return ts
+	// Create a new TypeSet to avoid modifying the original
+	newTypeSet := &TypeSet{
+		types:             filteredTypes,
+		originalTypes:     ts.originalTypes, // Keep reference to original types
+		currentPredicate:  ts.currentPredicate,
+		matchedPredicates: append([]string{}, ts.matchedPredicates...), // Copy slice
+	}
+	newTypeSet.matchedPredicates = append(newTypeSet.matchedPredicates, ts.currentPredicate)
+	return newTypeSet
 }
 
 // HaveDependencyOn filters types that have a dependency on the specified package
@@ -49,17 +69,41 @@ func (ts *TypeSet) HaveDependencyOn(dependency string) *TypeSet {
 	var filteredTypes []*TypeInfo
 	for _, t := range ts.types {
 		for _, imp := range t.Imports {
-			// Exact match or prefix match with a slash to ensure complete package path
-			if imp == dependency || strings.HasPrefix(imp, dependency+"/") {
+			// Exact match
+			if imp == dependency {
+				filteredTypes = append(filteredTypes, t)
+				break
+			}
+			
+			// Prefix match with slash (for exact package boundaries)
+			if strings.HasPrefix(imp, dependency+"/") {
+				filteredTypes = append(filteredTypes, t)
+				break
+			}
+			
+			// Suffix match for relative path matching (e.g., "infrastructure" matches "*/infrastructure")
+			if strings.HasSuffix(imp, "/"+dependency) {
+				filteredTypes = append(filteredTypes, t)
+				break
+			}
+			
+			// Contains match for partial path matching (e.g., "infrastructure" matches "*/infrastructure/*")
+			if strings.Contains(imp, "/"+dependency+"/") {
 				filteredTypes = append(filteredTypes, t)
 				break
 			}
 		}
 	}
 
-	ts.types = filteredTypes
-	ts.matchedPredicates = append(ts.matchedPredicates, ts.currentPredicate)
-	return ts
+	// Create a new TypeSet to avoid modifying the original
+	newTypeSet := &TypeSet{
+		types:             filteredTypes,
+		originalTypes:     ts.originalTypes, // Keep reference to original types
+		currentPredicate:  ts.currentPredicate,
+		matchedPredicates: append([]string{}, ts.matchedPredicates...), // Copy slice
+	}
+	newTypeSet.matchedPredicates = append(newTypeSet.matchedPredicates, ts.currentPredicate)
+	return newTypeSet
 }
 
 // ImplementInterface filters types that implement the specified interface
@@ -186,9 +230,15 @@ func (ts *TypeSet) Should() *TypeSet {
 //	ts.ShouldNot().HaveDependencyOn("github.com/some/dependency").BeStruct()
 func (ts *TypeSet) ShouldNot() *TypeSet {
 	ts.currentPredicate = "ShouldNot"
-	// Store the current types for later reference and set a flag
-	ts.matchedPredicates = append(ts.matchedPredicates, "Negate")
-	return ts
+	// Create a new TypeSet to avoid modifying the original
+	newTypeSet := &TypeSet{
+		types:             append([]*TypeInfo{}, ts.types...), // Copy types slice
+		originalTypes:     ts.originalTypes,
+		currentPredicate:  ts.currentPredicate,
+		matchedPredicates: append([]string{}, ts.matchedPredicates...), // Copy slice
+	}
+	newTypeSet.matchedPredicates = append(newTypeSet.matchedPredicates, "Negate")
+	return newTypeSet
 }
 
 // Not negates the following predicate
