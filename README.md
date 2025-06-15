@@ -1,16 +1,33 @@
 # GoArchTest
 
+[![Go Version](https://img.shields.io/badge/Go-1.24%2B-00ADD8?style=flat&logo=go)](https://golang.org/)
+[![Release](https://img.shields.io/github/v/release/solrac97gr/goarchtest?style=flat)](https://github.com/solrac97gr/goarchtest/releases)
+[![Go Reference](https://pkg.go.dev/badge/github.com/solrac97gr/goarchtest.svg)](https://pkg.go.dev/github.com/solrac97gr/goarchtest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 GoArchTest is a Go library for testing the architectural constraints of your Go applications. It is inspired by the .NET library [NetArchTest](https://github.com/BenMorris/NetArchTest), providing a fluent API to define and enforce architectural rules in your Go projects.
 
 ## Installation
 
 ```bash
-# Install the latest pre-release version
-go get github.com/solrac97gr/goarchtest@v0.1.0-alpha.1
+# Install the latest stable version
+go get github.com/solrac97gr/goarchtest@v0.1.0
 
-# Or install the latest version (when stable releases are available)
+# Or install the latest version directly
 go get github.com/solrac97gr/goarchtest
 ```
+
+## 🎉 What's New in v0.1.0
+
+**First Stable Release!** This release includes critical bug fixes and improvements:
+
+- ✅ **Fixed architectural violation detection** - Now properly catches violations that were previously missed
+- ✅ **Enhanced namespace matching** - Improved support for complex project structures  
+- ✅ **Reliable predicate chaining** - Fixed TypeSet immutability issues
+- ✅ **DDD pattern improvements** - Proper shared kernel usage in Domain-Driven Design
+- ✅ **Production ready** - Stable API with comprehensive test coverage
+
+[📋 Full Release Notes](RELEASE_NOTES_v0.1.0.md) | [🔄 Upgrade Guide](#upgrading-from-alpha)
 
 ## Quick Start
 
@@ -502,6 +519,23 @@ jobs:
 ```
 
 This ensures that architectural violations are caught early in the development process and prevents architectural drift.
+
+## Upgrading from Alpha
+
+If you're upgrading from `v0.1.0-alpha.1`, the API is fully backward compatible:
+
+```bash
+# Simply update your go.mod
+go get github.com/solrac97gr/goarchtest@v0.1.0
+```
+
+**No code changes required!** The v0.1.0 release only includes bug fixes and improvements while maintaining the same API.
+
+**Key improvements you'll get:**
+- More reliable architectural violation detection
+- Better support for complex project structures
+- Enhanced DDD pattern compliance
+- Improved predicate chaining stability
 
 ## Contributing
 
